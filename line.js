@@ -1,6 +1,16 @@
 "use strict";
 
-var translation;
+var translations;
+var rotations;
+var rotations_degrees;
+var scales;
+
+const data = [
+  [-100, 0, 100, 0],
+  [-100, 0, 100, 0]
+]
+
+let focus_index = 0;
 
 function main() {
   /** @type {HTMLCanvasElement} */
@@ -11,6 +21,7 @@ function main() {
   }
 
   var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader-2d", "fragment-shader-2d"]);
+  gl.useProgram(program);
 
   var positionLocation = gl.getAttribLocation(program, "a_position");
   var colorLocation = gl.getAttribLocation(program, "a_color");
@@ -19,42 +30,38 @@ function main() {
 
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-  setGeometry(gl);
+  gl.bufferData(gl.ARRAY_BUFFER, 32, gl.STATIC_DRAW);
 
   var colorBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, 64, gl.STATIC_DRAW);
 
-  setColors(gl);
-
-  translation = [200, 150];
-  var angleInRadians = 0;
-  var scale = [1, 1];
+  translations = [
+    [200, 150],
+    [300, 450]
+  ];
+  rotations = [0, 0];
+  rotations_degrees = [0, 0]
+  scales = [[1, 1], [1, 1]];
 
   drawScene();
 
-  webglLessonsUI.setupSlider("#x", {value: translation[0], slide: updatePosition(0), max: gl.canvas.width });
-  webglLessonsUI.setupSlider("#y", {value: translation[1], slide: updatePosition(1), max: gl.canvas.height});
-  webglLessonsUI.setupSlider("#angle", {slide: updateAngle, max: 360});
-  webglLessonsUI.setupSlider("#scaleX", {value: scale[0], slide: updateScale(0), min: -5, max: 5, step: 0.01, precision: 2});
-  webglLessonsUI.setupSlider("#scaleY", {value: scale[1], slide: updateScale(1), min: -5, max: 5, step: 0.01, precision: 2});
-
-  function updatePosition(index) {
-    return function(event, ui) {
-      translation[index] = ui.value;
-      drawScene();
-    };
-  }
+  // webglLessonsUI.setupSlider("#x", {value: translation[0], slide: updatePosition(0), max: gl.canvas.width });
+  // webglLessonsUI.setupSlider("#y", {value: translation[1], slide: updatePosition(1), max: gl.canvas.height});
+  webglLessonsUI.setupSlider("#rotate", {value: rotations[focus_index], slide: updateAngle, max: 360});
+  webglLessonsUI.setupSlider("#length", {value: scales[focus_index][0], slide: updateScale(0), min: -5, max: 5, step: 0.01, precision: 2});
+  // webglLessonsUI.setupSlider("#scaleY", {value: scale[1], slide: updateScale(1), min: -5, max: 5, step: 0.01, precision: 2});
 
   function updateAngle(event, ui) {
     var angleInDegrees = 360 - ui.value;
-    angleInRadians = angleInDegrees * Math.PI / 180;
+    rotations_degrees[focus_index] = ui.value;
+    rotations[focus_index] = angleInDegrees * Math.PI / 180;
     drawScene();
   }
-
+  
   function updateScale(index) {
     return function(event, ui) {
-      scale[index] = ui.value;
+      scales[focus_index][index] = ui.value;
       drawScene();
     };
   }
@@ -64,105 +71,83 @@ function main() {
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(program);
-    gl.enableVertexAttribArray(positionLocation);
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    var size = 2;          
-    var type = gl.FLOAT;   
-    var normalize = false; 
-    var stride = 0;        
-    var offset = 0;      
+    for (let i=0;i<2;i++) {
+      gl.useProgram(program);
 
-    gl.vertexAttribPointer(
-        positionLocation, size, type, normalize, stride, offset);
-    gl.enableVertexAttribArray(colorLocation);
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(data[i]));
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    var size = 4;         
-    var type = gl.FLOAT;   
-    var normalize = false; 
-    var stride = 0;        
-    var offset = 0;        
-    gl.vertexAttribPointer(
-        colorLocation, size, type, normalize, stride, offset);
+      gl.enableVertexAttribArray(colorLocation);
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);   
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten([[0, 0, 0, 1, 0, 0, 0, 1]]));
+      gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
 
-    
-    var matrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
-    matrix = m3.translate(matrix, translation[0], translation[1]);
-    matrix = m3.rotate(matrix, angleInRadians);
-    matrix = m3.scale(matrix, scale[0], scale[1]);
+      
+      var matrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
+      matrix = m3.translate(matrix, translations[i][0], translations[i][1]);
+      matrix = m3.rotate(matrix, rotations[i]);
+      matrix = m3.scale(matrix, scales[i][0], scales[i][1]);
 
-    gl.uniformMatrix3fv(matrixLocation, false, matrix);
+      gl.uniformMatrix3fv(matrixLocation, false, matrix);
 
-    var primitiveType = gl.LINES;
-    var offset = 0;
-    var count = 2;
-    gl.drawArrays(primitiveType, offset, count);
+      gl.drawArrays(gl.LINES, 0, 2);
+    }
   }
 
   document.onmousemove = function(event) {
-    if (Math.abs(event.clientX - translation[0]) <= 50 &&
-        Math.abs(event.clientY - translation[1]) <= 50
-    ) {
-        document.body.style.cursor = "pointer";
-    }
-    else {
-        console.log("Hi")
-        document.body.style.cursor = "auto";
+    document.body.style.cursor = "auto";
+    for (let i=0;i<data.length;i++) {
+      if (Math.abs(event.clientX - translations[i][0]) <= 50 &&
+          Math.abs(event.clientY - translations[i][1]) <= 50
+      ) {
+          document.body.style.cursor = "pointer";
+          break
+      }
     }
   }
 
   canvas.onmousedown = function(event) { 
-    if (Math.abs(event.clientX - translation[0]) <= 50 &&
-        Math.abs(event.clientY - translation[1]) <= 50
-    ) {
-        function moveAt(clientX, clientY) {
-            translation[0] = clientX 
-            translation[1] = clientY
-            drawScene()
-        }
-    
-        moveAt(event.clientX, event.clientY);
-    
-        function onMouseMove(event) {
-            moveAt(event.clientX, event.clientY);
-        }
-    
-        document.addEventListener('mousemove', onMouseMove);
-    
-        canvas.onmouseup = function() {
-            document.removeEventListener('mousemove', onMouseMove);
-            canvas.onmouseup = null;
-        };
+    for (let i=0;i<data.length;i++) {
+      if (Math.abs(event.clientX - translations[i][0]) <= 50 &&
+          Math.abs(event.clientY - translations[i][1]) <= 50
+      ) {
+          focus_index = i;
+
+          document.querySelector("#rotate > .gman-widget-outer > .gman-widget-slider").value = rotations_degrees[focus_index]
+          document.querySelector("#rotate > .gman-widget-outer > .gman-widget-value").innerHTML = rotations_degrees[focus_index]
+
+          document.querySelector("#length > .gman-widget-outer > .gman-widget-slider").value = scales[focus_index][0] * 100
+          document.querySelector("#length > .gman-widget-outer > .gman-widget-value").innerHTML = scales[focus_index][0].toFixed(2)
+          
+          function moveAt(clientX, clientY) {
+              translations[i][0] = clientX 
+              translations[i][1] = clientY
+              drawScene()
+          }
+      
+          moveAt(event.clientX, event.clientY);
+      
+          function onMouseMove(event) {
+              moveAt(event.clientX, event.clientY);
+          }
+      
+          document.addEventListener('mousemove', onMouseMove);
+      
+          canvas.onmouseup = function() {
+              document.removeEventListener('mousemove', onMouseMove);
+              canvas.onmouseup = null;
+          };
+          break
+      }
     }
   };
 
   canvas.ondragstart = function() {
     return false;
   };
-}
-
-
-function setGeometry(gl) {
-  gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([
-          -100, 0,
-           100, 0
-      ]),
-      gl.STATIC_DRAW);
-}
-
-function setColors(gl) {
-
-  gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array(
-        [ Math.random(), Math.random(), Math.random(), 1,
-          Math.random(), Math.random(), Math.random(), 1,
-        ]),
-      gl.STATIC_DRAW);
 }
 
 main();
