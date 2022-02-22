@@ -28,14 +28,17 @@ function main() {
 
   var matrixLocation = gl.getUniformLocation(program, "u_matrix");
 
+  // Position Buffer
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, 32, gl.STATIC_DRAW);
 
+  // Color Buffer
   var colorBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, 64, gl.STATIC_DRAW);
 
+  // Init Transformations
   translations = [
     [200, 150],
     [300, 450]
@@ -46,11 +49,8 @@ function main() {
 
   drawScene();
 
-  // webglLessonsUI.setupSlider("#x", {value: translation[0], slide: updatePosition(0), max: gl.canvas.width });
-  // webglLessonsUI.setupSlider("#y", {value: translation[1], slide: updatePosition(1), max: gl.canvas.height});
   webglLessonsUI.setupSlider("#rotate", {value: rotations[focus_index], slide: updateAngle, max: 360});
   webglLessonsUI.setupSlider("#length", {value: scales[focus_index][0], slide: updateScale(0), min: -5, max: 5, step: 0.01, precision: 2});
-  // webglLessonsUI.setupSlider("#scaleY", {value: scale[1], slide: updateScale(1), min: -5, max: 5, step: 0.01, precision: 2});
 
   function updateAngle(event, ui) {
     var angleInDegrees = 360 - ui.value;
