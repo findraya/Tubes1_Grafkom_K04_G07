@@ -72,7 +72,7 @@ function main() {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    for (let i=0;i<2;i++) {
+    for (let i=0;i<data.length;i++) {
       gl.useProgram(program);
 
       gl.enableVertexAttribArray(positionLocation);
@@ -140,9 +140,15 @@ function main() {
               document.removeEventListener('mousemove', onMouseMove);
               canvas.onmouseup = null;
           };
-          break
+          return
       }
     }
+    data.push([-100, 0, 100, 0]);
+    translations.push([event.clientX, event.clientY]);
+    rotations.push(0);
+    rotations_degrees.push(0)
+    scales.push([1, 1])
+    drawScene()
   };
 
   canvas.ondragstart = function() {

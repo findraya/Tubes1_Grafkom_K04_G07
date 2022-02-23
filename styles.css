@@ -7,3 +7,7 @@ canvas {
   height: 100vh;
   display: block;
 }
+
+.gman-widget-label {
+  min-width: 2em;
+}
