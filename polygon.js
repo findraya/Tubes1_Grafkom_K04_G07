@@ -1,5 +1,18 @@
 "use strict";
 
+var translations;
+var rotations;
+var rotations_degrees;
+var scales;
+var colors;
+
+const data = [
+    [-150, -100, 150, -100, -150, 100],
+    [150, -100, -150, 100, 150, 100]
+]
+
+let focus_index = 0;
+
 function main() {
     // Get A WebGL context
     /** @type {HTMLCanvasElement} */
@@ -20,42 +33,59 @@ function main() {
     // Create a buffer for the positions.
     var positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 32, gl.STATIC_DRAW);
 
     // Set Geometry.
     var sides = 6;
-    setGeometry(gl, sides);
+    //setGeometry(gl, sides);
 
     // Create a buffer for the colors.
     var colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 64, gl.STATIC_DRAW);
 
     // Set the colors.
-    var colors = [0.3, 0.7, 1];
-    setColors(gl, colors, sides);
+    // var colors = [0.3, 0.7, 1];
+    colors = [
+        [0.3, 0.7, 1],
+        [1, 0.3, 0.7]
+    ];
+    //setColors(gl, focus_index, colors, sides);
 
+    /*
     var translation = [200, 150];
     var angleInRadians = 0;
     var scale = [1, 1];
+    */
+
+    // Init Transformations
+    translations = [
+        [200, 150],
+        [300, 450]
+    ];
+    rotations = [0, 0];
+    rotations_degrees = [0, 0]
+    scales = [[1, 1], [1, 1]];
 
     drawScene();
 
     // Setup a ui.
-    webglLessonsUI.setupSlider("#sides", { value: sides, slide: updateSides, min: 3, max: 8, step: 1, precision: 2 });
-    webglLessonsUI.setupSlider("#red", { value: colors[0], slide: updateColor(0), min: 0, max: 1, step: 0.01, precision: 2 });
-    webglLessonsUI.setupSlider("#green", { value: colors[1], slide: updateColor(1), min: 0, max: 1, step: 0.01, precision: 2 });
-    webglLessonsUI.setupSlider("#blue", { value: colors[2], slide: updateColor(2), min: 0, max: 1, step: 0.01, precision: 2 });
+    //webglLessonsUI.setupSlider("#sides", { value: sides, slide: updateSides, min: 3, max: 8, step: 1, precision: 2 });
+    webglLessonsUI.setupSlider("#red", { value: colors[focus_index][0], slide: updateColor(0), min: 0, max: 1, step: 0.01, precision: 2 });
+    webglLessonsUI.setupSlider("#green", { value: colors[focus_index][1], slide: updateColor(1), min: 0, max: 1, step: 0.01, precision: 2 });
+    webglLessonsUI.setupSlider("#blue", { value: colors[focus_index][2], slide: updateColor(2), min: 0, max: 1, step: 0.01, precision: 2 });
 
-    function updateSides(event, ui) {
+    /*function updateSides(event, ui) {
         sides = ui.value;
         setGeometry(gl, sides);
-        setColors(gl, colors, sides);
+        setColors(gl, focus_index, colors, sides);
         drawScene();
-    }
+    }*/
 
     function updateColor(index){
         return function (event, ui) {
-            colors[index] = ui.value;
-            setColors(gl, colors, sides);
+            colors[focus_index][index] = ui.value;
+            setColors(gl, focus_index, colors, sides);
             drawScene();
         };
     }
@@ -70,85 +100,115 @@ function main() {
         // Clear the canvas.
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // Tell it to use our program (pair of shaders)
-        gl.useProgram(program);
+        for (let i = 0; i < data.length; i++) {
+            // Tell it to use our program (pair of shaders)
+            gl.useProgram(program);
 
-        // Turn on the position attribute
-        gl.enableVertexAttribArray(positionLocation);
+            // Turn on the position attribute
+            gl.enableVertexAttribArray(positionLocation);
 
-        // Bind the position buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            // Bind the position buffer.
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-        // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-        var size = 2;          // 2 components per iteration
-        var type = gl.FLOAT;   // the data is 32bit floats
-        var normalize = false; // don't normalize the data
-        var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-        var offset = 0;        // start at the beginning of the buffer
-        gl.vertexAttribPointer(
-            positionLocation, size, type, normalize, stride, offset);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(data[i]));
 
-        // Turn on the color attribute
-        gl.enableVertexAttribArray(colorLocation);
+            // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+            var size = 2;          // 2 components per iteration
+            var type = gl.FLOAT;   // the data is 32bit floats
+            var normalize = false; // don't normalize the data
+            var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+            var offset = 0;        // start at the beginning of the buffer
+            gl.vertexAttribPointer(
+                positionLocation, size, type, normalize, stride, offset);
 
-        // Bind the color buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            // Turn on the color attribute
+            gl.enableVertexAttribArray(colorLocation);
 
-        // Tell the color attribute how to get data out of colorBuffer (ARRAY_BUFFER)
-        var size = 4;          // 4 components per iteration
-        var type = gl.FLOAT;   // the data is 32bit floats
-        var normalize = false; // don't normalize the data
-        var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-        var offset = 0;        // start at the beginning of the buffer
-        gl.vertexAttribPointer(
-            colorLocation, size, type, normalize, stride, offset);
+            // Bind the color buffer.
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 
-        // Compute the matrix
-        var matrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
-        matrix = m3.translate(matrix, translation[0], translation[1]);
-        matrix = m3.rotate(matrix, angleInRadians);
-        matrix = m3.scale(matrix, scale[0], scale[1]);
+            // Set the colors
+            setColors(gl, i, colors, sides);
 
-        // Set the matrix.
-        gl.uniformMatrix3fv(matrixLocation, false, matrix);
+            // Tell the color attribute how to get data out of colorBuffer (ARRAY_BUFFER)
+            var size = 4;          // 4 components per iteration
+            var type = gl.FLOAT;   // the data is 32bit floats
+            var normalize = false; // don't normalize the data
+            var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+            var offset = 0;        // start at the beginning of the buffer
+            gl.vertexAttribPointer(
+                colorLocation, size, type, normalize, stride, offset);
 
-        // Draw the geometry.
-        var primitiveType = gl.TRIANGLES;
-        var offset = 0;
-        var count = 6;
-        gl.drawArrays(primitiveType, offset, count);
+            // Compute the matrix
+            var matrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
+            matrix = m3.translate(matrix, translations[i][0], translations[i][1]);
+            matrix = m3.rotate(matrix, rotations[i]);
+            matrix = m3.scale(matrix, scales[i][0], scales[i][1]);
+
+            // Set the matrix.
+            gl.uniformMatrix3fv(matrixLocation, false, matrix);
+
+            // Draw the geometry.
+            var primitiveType = gl.TRIANGLES;
+            var offset = 0;
+            var count = 3;
+            gl.drawArrays(primitiveType, offset, count);
+        }
     }
 
     document.onmousemove = function (event) {
-        if (Math.abs(event.clientX - translation[0]) <= 50 && Math.abs(event.clientY - translation[1]) <= 50) {
-            document.body.style.cursor = "pointer";
-        }
-        else {
-            document.body.style.cursor = "auto";
+        document.body.style.cursor = "auto";
+        for (let i = 0; i < data.length; i++) {
+            if (Math.abs(event.clientX - translations[i][0]) <= 50 && Math.abs(event.clientY - translations[i][1]) <= 50) {
+                document.body.style.cursor = "pointer";
+                break
+            }
         }
     }
 
     canvas.onmousedown = function (event) {
-        if (Math.abs(event.clientX - translation[0]) <= 50 && Math.abs(event.clientY - translation[1]) <= 50) {
-            function moveAt(clientX, clientY) {
-                translation[0] = clientX
-                translation[1] = clientY
-                drawScene()
-            }
+        for (let i = 0; i < data.length; i++) {
+            if (Math.abs(event.clientX - translations[i][0]) <= 50 && Math.abs(event.clientY - translations[i][1]) <= 50) {
+                focus_index = i;
 
-            moveAt(event.clientX, event.clientY);
+                document.querySelector("#red > .gman-widget-outer > .gman-widget-slider").value = colors[focus_index][0] * 100
+                document.querySelector("#red > .gman-widget-outer > .gman-widget-value").innerHTML = colors[focus_index][0].toFixed(2)
 
-            function onMouseMove(event) {
+                document.querySelector("#green > .gman-widget-outer > .gman-widget-slider").value = colors[focus_index][1] * 100
+                document.querySelector("#green > .gman-widget-outer > .gman-widget-value").innerHTML = colors[focus_index][1].toFixed(2)
+
+                document.querySelector("#blue > .gman-widget-outer > .gman-widget-slider").value = colors[focus_index][2] * 100
+                document.querySelector("#blue > .gman-widget-outer > .gman-widget-value").innerHTML = colors[focus_index][2].toFixed(2)
+
+                function moveAt(clientX, clientY) {
+                    translations[i][0] = clientX
+                    translations[i][1] = clientY
+                    drawScene()
+                }
+
                 moveAt(event.clientX, event.clientY);
+
+                function onMouseMove(event) {
+                    moveAt(event.clientX, event.clientY);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+
+                canvas.onmouseup = function () {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    canvas.onmouseup = null;
+                };
+                return
             }
-
-            document.addEventListener('mousemove', onMouseMove);
-
-            canvas.onmouseup = function () {
-                document.removeEventListener('mousemove', onMouseMove);
-                canvas.onmouseup = null;
-            };
         }
+
+        data.push([-150, -100, 150, -100, -150, 100]);
+        translations.push([event.clientX, event.clientY]);
+        rotations.push(0);
+        rotations_degrees.push(0)
+        scales.push([1, 1])
+        colors.push([0.3, 0.7, 1])
+        drawScene()
     };
 
     canvas.ondragstart = function () {
@@ -163,6 +223,30 @@ function main() {
 function setGeometry(gl, sides) {
     gl.bufferData(
         gl.ARRAY_BUFFER,
+        /*new Float32Array([
+            -200, 0,
+            -50, 150,
+            0, 0,
+
+            -50, 150,
+            0, 0,
+            50, 150,
+            
+            0, 0,
+            50, 150,
+            0, 200,
+            
+            0, 0,
+            0, 200,
+            50, -150,
+            
+            0, 0,
+            50, -150,
+            -50, -150,
+
+            0, 0,
+            -50, -150,
+            -200, 0])*/
         new Float32Array([
             -150, -100,
             150, -100,
@@ -174,18 +258,38 @@ function setGeometry(gl, sides) {
 // that make the rectangle.
 // Note, will put the values in whatever buffer is currently
 // bound to the ARRAY_BUFFER bind point
-function setColors(gl, colors, sides) {
+function setColors(gl, focus_index, colors, sides) {
     // Make every vertex a different color.
-    var r = colors[0]
-    var g = colors[1]
-    var b = colors[2]
-    gl.bufferData(
+    var r = colors[focus_index][0]
+    var g = colors[focus_index][1]
+    var b = colors[focus_index][2]
+    gl.bufferSubData(
         gl.ARRAY_BUFFER,
-        new Float32Array(
-            [r, g, b, 1,
+        0,
+        flatten(
+            [/*r, g, b, 1,
                 r, g, b, 1,
-                r, g, b, 1]),
-        gl.STATIC_DRAW);
+                r, g, b, 1,
+
+                r, g, b, 1,
+                r, g, b, 1,
+                r, g, b, 1,
+
+                r, g, b, 1,
+                r, g, b, 1,
+                r, g, b, 1,
+
+                r, g, b, 1,
+                r, g, b, 1,
+                r, g, b, 1,
+
+                r, g, b, 1,
+                r, g, b, 1,
+                r, g, b, 1,
+                */
+                r, g, b, 1,
+                r, g, b, 1,
+                r, g, b, 1]));
 }
 
 
