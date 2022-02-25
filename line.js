@@ -556,6 +556,93 @@ function main() {
       </div>
     `;
   }
+
+  function downloadToFile(data) {
+    let filename = "file.json";
+    let contentType = "json";
+    let a = document.createElement("a");
+    let file = new Blob([data], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  
+  function saveModel() {
+    const data = {
+      line_points,
+      line_translations,
+      line_rotations,
+      line_rotation_degrees,
+      line_scales,
+      line_colors,
+      square_points,
+      square_translations,
+      square_rotations,
+      square_rotation_degrees,
+      square_scales,
+      square_colors,
+      rectangle_points,
+      rectangle_translations,
+      rectangle_rotations,
+      rectangle_rotation_degrees,
+      rectangle_scales,
+      rectangle_colors,
+      polygon_points,
+      polygon_translations,
+      polygon_rotations,
+      polygon_rotation_degrees,
+      polygon_scales,
+      polygon_colors,
+      mode,
+      focus_index,
+      focus_object_type,
+      create_object_type
+    };
+    downloadToFile(JSON.stringify(data));
+  };
+  
+  function loadModel(e) {
+    let file = e.target.files[0];
+    let reader = new FileReader();
+    reader.addEventListener("load", function (e) {
+      let data = e.target.result;
+      data = JSON.parse(data);
+      line_points = data.line_points;
+      line_translations = data.line_translations;
+      line_rotations = data.line_rotations;
+      line_rotation_degrees = data.line_rotation_degrees;
+      line_scales = data.line_scales;
+      line_colors = data.line_colors;
+      square_points = data.square_points;
+      square_translations = data.square_translations;
+      square_rotations = data.square_rotations;
+      square_rotation_degrees = data.square_rotation_degrees;
+      square_scales = data.square_scales;
+      square_colors = data.square_colors;
+      rectangle_points = data.rectangle_points;
+      rectangle_translations = data.rectangle_translations;
+      rectangle_rotations = data.rectangle_rotations;
+      rectangle_rotation_degrees = data.rectangle_rotation_degrees;
+      rectangle_scales = data.rectangle_scales;
+      rectangle_colors = data.rectangle_colors;
+      polygon_points = data.polygon_points;
+      polygon_translations = data.polygon_translations;
+      polygon_rotations = data.polygon_rotations;
+      polygon_rotation_degrees = data.polygon_rotation_degrees;
+      polygon_scales = data.polygon_scales;
+      polygon_colors = data.polygon_colors;
+      mode = data.mode;
+      focus_index = data.focus_index;
+      focus_object_type = data.focus_object_type;
+      create_object_type = data.create_object_type;
+      drawScene();
+    });
+    reader.readAsBinaryString(file);
+  };
+
+  document.querySelector("#save-model").onclick = saveModel
+  document.querySelector("#load-model").onchange = loadModel
 }
 
 function setColors(gl, focus_index, polygon_colors) {
