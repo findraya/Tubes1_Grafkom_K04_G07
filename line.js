@@ -57,11 +57,7 @@ let polygon_translations = [];
 let polygon_rotations = [];
 let polygon_rotation_degrees = [];
 let polygon_scales = [];
-let polygon_colors = [
-  0, 0, 0, 1,
-  0, 0, 0, 1,
-  0, 0, 0, 1,
-];
+let polygon_colors = [];
 
 let mode = "select";
 
@@ -189,8 +185,8 @@ function main() {
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
       gl.enableVertexAttribArray(colorLocation);
-      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);   
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(polygon_colors));
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      setColors(gl, i, polygon_colors);
       gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
 
       var matrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
@@ -381,14 +377,14 @@ function main() {
 
             setupSelectOptions(mode)
 
-            document.querySelector("#red > .gman-widget-outer > .gman-widget-slider").value = polygon_rotation_degrees[focus_index]
-            document.querySelector("#red > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_rotation_degrees[focus_index]
+            document.querySelector("#red > .gman-widget-outer > .gman-widget-slider").value = polygon_colors[focus_index][0] * 100
+            document.querySelector("#red > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_colors[focus_index][0].toFixed(2)
 
-            document.querySelector("#green > .gman-widget-outer > .gman-widget-slider").value = polygon_scales[focus_index][0] * 100
-            document.querySelector("#green > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_scales[focus_index][0].toFixed(2)
+            document.querySelector("#green > .gman-widget-outer > .gman-widget-slider").value = polygon_colors[focus_index][1] * 100
+            document.querySelector("#green > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_colors[focus_index][1].toFixed(2)
 
-            document.querySelector("#blue > .gman-widget-outer > .gman-widget-slider").value = polygon_scales[focus_index][0] * 100
-            document.querySelector("#blue > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_scales[focus_index][0].toFixed(2)
+            document.querySelector("#blue > .gman-widget-outer > .gman-widget-slider").value = polygon_colors[focus_index][2] * 100
+            document.querySelector("#blue > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_colors[focus_index][2].toFixed(2)
             
             function moveAt(clientX, clientY) {
                 polygon_translations[i][0] = clientX
@@ -441,6 +437,7 @@ function main() {
         polygon_rotations.push(0);
         polygon_rotation_degrees.push(0)
         polygon_scales.push([1, 1])
+        polygon_colors.push([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]);
       }
       drawScene()
     }
@@ -469,9 +466,9 @@ function main() {
       webglLessonsUI.setupSlider("#scaleY", {value: rectangle_scales[focus_index][1], slide: updateScaleRectangle(1), min: -5, max: 5, step: 0.01, precision: 2});
     }
     else if (focus_object_type == 3) {
-      webglLessonsUI.setupSlider("#red", { value: colors[focus_index][0], slide: updateColorPolygon(0), min: 0, max: 1, step: 0.01, precision: 2 });
-      webglLessonsUI.setupSlider("#green", { value: colors[focus_index][1], slide: updateColorPolygon(1), min: 0, max: 1, step: 0.01, precision: 2 });
-      webglLessonsUI.setupSlider("#blue", { value: colors[focus_index][2], slide: updateColorPolygon(2), min: 0, max: 1, step: 0.01, precision: 2 });
+      webglLessonsUI.setupSlider("#red", { value: polygon_colors[focus_index][0], slide: updateColorPolygon(0), min: 0, max: 1, step: 0.01, precision: 2 });
+      webglLessonsUI.setupSlider("#green", { value: polygon_colors[focus_index][1], slide: updateColorPolygon(1), min: 0, max: 1, step: 0.01, precision: 2 });
+      webglLessonsUI.setupSlider("#blue", { value: polygon_colors[focus_index][2], slide: updateColorPolygon(2), min: 0, max: 1, step: 0.01, precision: 2 });
     }
   
     function updateAngleLine(event, ui) {
@@ -490,7 +487,7 @@ function main() {
   
     function updateAngleSquare(event, ui) {
       var angleInDegrees = 360 - ui.value;
-      square_rotations_degrees[focus_index] = ui.value;
+      square_rotation_degrees[focus_index] = ui.value;
       square_rotations[focus_index] = angleInDegrees * Math.PI / 180;
       drawScene();
     }
@@ -505,7 +502,7 @@ function main() {
   
     function updateAngleRectangle(event, ui) {
       var angleInDegrees = 360 - ui.value;
-      rectangle_rotations_degrees[focus_index] = ui.value;
+      rectangle_rotation_degrees[focus_index] = ui.value;
       rectangle_rotations[focus_index] = angleInDegrees * Math.PI / 180;
       drawScene();
     }
@@ -518,11 +515,10 @@ function main() {
     }
   
     function updateColorPolygon(index){
-      // return function (event, ui) {
-      //     colors[focus_index][index] = ui.value;
-      //     setColors(gl, focus_index, colors, sides);
-      //     drawScene();
-      // };
+      return function (event, ui) {
+        polygon_colors[focus_index][index] = ui.value;
+        drawScene();
+      };
     }
   }
 
@@ -560,6 +556,19 @@ function main() {
       </div>
     `;
   }
+}
+
+function setColors(gl, focus_index, polygon_colors) {
+  var r = polygon_colors[focus_index][0];
+  var g = polygon_colors[focus_index][1];
+  var b = polygon_colors[focus_index][2];
+  gl.bufferSubData(
+    gl.ARRAY_BUFFER,
+    0,
+    flatten(
+      [r, g, b, 1,
+        r, g, b, 1,
+        r, g, b, 1]));
 }
 
 function clearSelectOptions() {
