@@ -3,19 +3,37 @@
     <div class="row">
       <canvas class="col-9" id="canvas"></canvas>
       <div class="col-3 d-flex flex-column align-items-center p-4">
-        <h1 style="font-family: monospace;">Architect.io</h1>
-        <p class="text-center">2D Web Based CAD <br />(Computer-Aided Design)</p>
-        <button type="button" class="btn btn-primary mb-4">Help</button>
-        <form class="mx-4 my-4">
+        <div class="border-bottom w-100 d-flex flex-column align-items-center border-dark">
+          <h1 style="font-family: monospace;">Architect.io</h1>
+          <p class="text-center">2D Web Based CAD <br />(Computer-Aided Design)</p>
+          <button type="button" class="btn btn-primary mb-4">Help</button>
+        </div>
+        <form class="mx-4 my-4 border-bottom border-dark w-100">
           <div class="form-group">
             <label for="exampleFormControlFile1">Load model</label>
             <input type="file" class="form-control-file mt-1" id="exampleFormControlFile1">
           </div>
-          <button type="button" class="btn btn-primary mt-2">Save model</button>
+          <button type="button" class="btn btn-primary mt-2 mb-4">Save model</button>
         </form>
+        <div>
+          <button type="button" class="btn btn-primary mt-2" id="select-button">Select</button>
+          <button type="button" class="btn btn-outline-primary mt-2" id="create-button">Create</button>
+        </div>
         <div class="d-flex flex-column align-items-center my-4" id="ui">
           <div id="rotate"></div>
           <div id="length"></div>
+          <div id="scale"></div> 
+          <div id="scaleX"></div>
+          <div id="scaleY"></div> 
+          <div id="red"></div>
+          <div id="green"></div>
+          <div id="blue"></div>  
+        </div>
+        <div class="d-flex flex-column" id="create-ui">
+          <div id="line-radio"></div>
+          <div id="square-radio"></div>
+          <div id="rectangle-radio"></div> 
+          <div id="polygon-radio"></div>
         </div>
       </div>
     </div>
@@ -53,8 +71,6 @@
     <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
     <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
     <script src="https://webglfundamentals.org/webgl/resources/m3.js"></script>
-    <script src="https://www.cs.unm.edu/~angel/COURSERA/CODE/Common/webgl-utils.js"></script>
-    <script src="https://www.cs.unm.edu/~angel/COURSERA/CODE/Common/initShaders.js"></script>
     <script src="https://www.cs.unm.edu/~angel/COURSERA/CODE/Common/MV.js"></script>
     <script src="line.js"></script>
   </body>
