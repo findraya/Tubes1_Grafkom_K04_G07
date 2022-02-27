@@ -12,10 +12,7 @@ let rectangle_geometry = [
   -150,  100, 150, -100,
   -150,  100, 150,  100
 ]
-let polygon_geometry = [
-  -150, -100, 150, 
-  -100, -150, 100
-]
+let polygon_geometry = []
 
 // line data
 let line_points = [];
@@ -58,6 +55,8 @@ let polygon_rotations = [];
 let polygon_rotation_degrees = [];
 let polygon_scales = [];
 let polygon_colors = [];
+let polygon_default_colors = [];
+let polygon_vertexes = [];
 
 let mode = "select";
 
@@ -186,7 +185,7 @@ function main() {
 
       gl.enableVertexAttribArray(colorLocation);
       gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-      setColors(gl, i, polygon_colors);
+      setColors(gl, polygon_colors[i][0], polygon_colors[i][1], polygon_colors[i][2], polygon_vertexes[i]);
       gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
 
       var matrix = m3.projection(gl.canvas.clientWidth, gl.canvas.clientHeight);
@@ -196,7 +195,7 @@ function main() {
 
       gl.uniformMatrix3fv(matrixLocation, false, matrix);
 
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.drawArrays(gl.TRIANGLE_FAN, 0, polygon_vertexes[i]);
     }
   }
 
@@ -343,8 +342,8 @@ function main() {
             document.querySelector("#scaleX > .gman-widget-outer > .gman-widget-slider").value = rectangle_scales[focus_index][0] * 100
             document.querySelector("#scaleX > .gman-widget-outer > .gman-widget-value").innerHTML = rectangle_scales[focus_index][0].toFixed(2)
 
-            document.querySelector("#scaleY > .gman-widget-outer > .gman-widget-slider").value = rectangle_scales[focus_index][0] * 100
-            document.querySelector("#scaleY > .gman-widget-outer > .gman-widget-value").innerHTML = rectangle_scales[focus_index][0].toFixed(2)
+            document.querySelector("#scaleY > .gman-widget-outer > .gman-widget-slider").value = rectangle_scales[focus_index][1] * 100
+            document.querySelector("#scaleY > .gman-widget-outer > .gman-widget-value").innerHTML = rectangle_scales[focus_index][1].toFixed(2)
             
             function moveAt(clientX, clientY) {
                 rectangle_translations[i][0] = clientX
@@ -376,6 +375,15 @@ function main() {
             focus_object_type = 3;
 
             setupSelectOptions(mode)
+
+            document.querySelector("#rotate > .gman-widget-outer > .gman-widget-slider").value = polygon_rotation_degrees[focus_index]
+            document.querySelector("#rotate > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_rotation_degrees[focus_index]
+
+            document.querySelector("#scaleX > .gman-widget-outer > .gman-widget-slider").value = polygon_scales[focus_index][0] * 100
+            document.querySelector("#scaleX > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_scales[focus_index][0].toFixed(2)
+
+            document.querySelector("#scaleY > .gman-widget-outer > .gman-widget-slider").value = polygon_scales[focus_index][1] * 100
+            document.querySelector("#scaleY > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_scales[focus_index][1].toFixed(2)
 
             document.querySelector("#red > .gman-widget-outer > .gman-widget-slider").value = polygon_colors[focus_index][0] * 100
             document.querySelector("#red > .gman-widget-outer > .gman-widget-value").innerHTML = polygon_colors[focus_index][0].toFixed(2)
@@ -432,12 +440,27 @@ function main() {
         rectangle_scales.push([1, 1]) 
       }
       else {
+        var polygonSides = parseFloat(document.getElementById("sidePolygon").value);
+        var polygonVertexes = polygonSides + 1;
+        var x, y;
+        for (var i = 0; i < polygonVertexes; i++) {
+          x = 100 * Math.cos(2 * Math.PI / polygonSides * i);
+          y = 100 * Math.sin(2 * Math.PI / polygonSides * i);
+          polygon_geometry.push(x);
+          polygon_geometry.push(y);
+          polygon_default_colors.push(0, 0, 0, 1);
+        }
+
         polygon_points.push(polygon_geometry);
         polygon_translations.push([event.clientX, event.clientY]);
         polygon_rotations.push(0);
-        polygon_rotation_degrees.push(0)
-        polygon_scales.push([1, 1])
-        polygon_colors.push([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]);
+        polygon_rotation_degrees.push(0);
+        polygon_scales.push([1, 1]);
+        polygon_colors.push(polygon_default_colors);
+        polygon_vertexes.push(polygonVertexes);
+
+        polygon_geometry = [];
+        polygon_default_colors = [];
       }
       drawScene()
     }
@@ -466,6 +489,9 @@ function main() {
       webglLessonsUI.setupSlider("#scaleY", {value: rectangle_scales[focus_index][1], slide: updateScaleRectangle(1), min: -5, max: 5, step: 0.01, precision: 2});
     }
     else if (focus_object_type == 3) {
+      webglLessonsUI.setupSlider("#rotate", { value: polygon_rotations[focus_index], slide: updateAnglePolygon, max: 360 });
+      webglLessonsUI.setupSlider("#scaleX", { value: polygon_scales[focus_index][0], slide: updateScalePolygon(0), min: -5, max: 5, step: 0.01, precision: 2 });
+      webglLessonsUI.setupSlider("#scaleY", { value: polygon_scales[focus_index][1], slide: updateScalePolygon(1), min: -5, max: 5, step: 0.01, precision: 2 });
       webglLessonsUI.setupSlider("#red", { value: polygon_colors[focus_index][0], slide: updateColorPolygon(0), min: 0, max: 1, step: 0.01, precision: 2 });
       webglLessonsUI.setupSlider("#green", { value: polygon_colors[focus_index][1], slide: updateColorPolygon(1), min: 0, max: 1, step: 0.01, precision: 2 });
       webglLessonsUI.setupSlider("#blue", { value: polygon_colors[focus_index][2], slide: updateColorPolygon(2), min: 0, max: 1, step: 0.01, precision: 2 });
@@ -514,6 +540,20 @@ function main() {
       };
     }
   
+    function updateAnglePolygon(event, ui) {
+      var angleInDegrees = 360 - ui.value;
+      polygon_rotation_degrees[focus_index] = ui.value;
+      polygon_rotations[focus_index] = angleInDegrees * Math.PI / 180;
+      drawScene();
+    }
+
+    function updateScalePolygon(index) {
+      return function (event, ui) {
+        polygon_scales[focus_index][index] = ui.value;
+        drawScene();
+      };
+    }
+
     function updateColorPolygon(index){
       return function (event, ui) {
         polygon_colors[focus_index][index] = ui.value;
@@ -523,6 +563,10 @@ function main() {
   }
 
   function setupCreateOptions() {
+    document.querySelector("#sides-number").innerHTML = `
+      <label class="form-check-label">Number of Polygon Sides</label>
+      <input type="number" id="sidePolygon" placeholder="side polygon" value="3" min="3" max="15" class="form-control form-control-sm" />
+    `;
     document.querySelector("#line-radio").innerHTML = `
       <div class="form-check">
         <input class="form-check-input" type="radio" name="createRadios" id="line" value="line" checked onclick="create_object_type = 0">
@@ -594,6 +638,7 @@ function main() {
       polygon_rotation_degrees,
       polygon_scales,
       polygon_colors,
+      polygon_vertexes,
       mode,
       focus_index,
       focus_object_type,
@@ -632,6 +677,7 @@ function main() {
       polygon_rotation_degrees = data.polygon_rotation_degrees;
       polygon_scales = data.polygon_scales;
       polygon_colors = data.polygon_colors;
+      polygon_vertexes = data.polygon_vertexes;
       mode = data.mode;
       focus_index = data.focus_index;
       focus_object_type = data.focus_object_type;
@@ -645,17 +691,15 @@ function main() {
   document.querySelector("#load-model").onchange = loadModel
 }
 
-function setColors(gl, focus_index, polygon_colors) {
-  var r = polygon_colors[focus_index][0];
-  var g = polygon_colors[focus_index][1];
-  var b = polygon_colors[focus_index][2];
+function setColors(gl, r, g, b, vertexes) {
+  var colors = [];
+  for (var i = 0; i < vertexes; i++) {
+    colors.push(r, g, b, 1);
+  }
   gl.bufferSubData(
     gl.ARRAY_BUFFER,
     0,
-    flatten(
-      [r, g, b, 1,
-        r, g, b, 1,
-        r, g, b, 1]));
+    flatten(colors));
 }
 
 function clearSelectOptions() {
@@ -670,6 +714,7 @@ function clearSelectOptions() {
 }
 
 function clearCreateOptions() {
+  document.querySelector("#sides-number").innerHTML = "";
   document.querySelector("#line-radio").innerHTML = "";
   document.querySelector("#square-radio").innerHTML = "";
   document.querySelector("#rectangle-radio").innerHTML = "";
