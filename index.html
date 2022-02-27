@@ -1,5 +1,5 @@
 <html>
-  <body class="overflow-hidden">
+  <body style="overflow:hidden;">
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -35,8 +35,8 @@
       </div>
     </div>
     <div class="row">
-      <canvas class="col-9" id="canvas"></canvas>
-      <div class="col-3 d-flex flex-column align-items-center p-4">
+      <canvas class="col-9 border" id="canvas" style="background-color: rgba(0, 0, 0, 0.025);"></canvas>
+      <div class="col-3 d-flex flex-column align-items-center p-4" style="box-shadow: -3px 0 8px -2px rgba(0, 0, 0, 0.2);">
         <div class="border-bottom w-100 d-flex flex-column align-items-center border-dark">
           <h1 style="font-family: monospace;">Architect.io</h1>
           <p class="text-center">2D Web Based CAD <br />(Computer-Aided Design)</p>
@@ -105,11 +105,11 @@
     }
     </script>
 
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
-    <script src="https://webglfundamentals.org/webgl/resources/m3.js"></script>
-    <script src="https://www.cs.unm.edu/~angel/COURSERA/CODE/Common/MV.js"></script>
-    <script src="line.js"></script>
+    <script src="./wrapper/webgl-utils.js"></script>
+    <script src="./wrapper/input-forms.js"></script>
+    <script src="./wrapper/m3.js"></script>
+    <script src="./wrapper/MV.js"></script>
+    <script src="logic.js"></script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
