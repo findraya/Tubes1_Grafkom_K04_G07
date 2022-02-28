@@ -612,7 +612,7 @@ function main() {
 
   // download file mechanism
   function downloadToFile(data) {
-    let filename = "file.json";
+    let filename = "model.json";
     let contentType = "json";
     let a = document.createElement("a");
     let file = new Blob([data], { type: contentType });
